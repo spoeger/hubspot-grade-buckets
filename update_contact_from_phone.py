@@ -1,31 +1,26 @@
+# update_contact_from_phone.py
+
 from trestle_reverse_phone import reverse_lookup
 from hubspot_helpers import update_contact_address
+import time
 
 def process_contact(contact_id, phone_number):
-    """
-    Runs the full flow:
-    - Looks up address via Trestle using phone number
-    - Updates HubSpot contact with the returned address
+    print(f"Starting process for contact {contact_id} with phone {phone_number}")
+    
+    start_lookup = time.time()
+    address_data = reverse_lookup(phone_number)
+    print(f"⏱️ Trestle reverse lookup took {time.time() - start_lookup:.2f} seconds")
 
-    Returns:
-        dict: {success: bool, error: optional str}
-    """
+    if not address_data:
+        print(f"⚠️ No address found for {phone_number}")
+        return {"success": False}
 
-    print(f"🔄 Starting process for contact {contact_id} with phone {phone_number}")
+    start_update = time.time()
+    update_success = update_contact_address(contact_id, address_data)
+    print(f"⏱️ HubSpot address update took {time.time() - start_update:.2f} seconds")
 
-    address = reverse_lookup(phone_number)
-
-    if not address:
-        error_msg = f"❌ No valid address found for {phone_number}"
-        print(error_msg)
-        return {"success": False, "error": error_msg}
-
-    success = update_contact_address(contact_id, address)
-
-    if not success:
-        error_msg = f"❌ Failed to update HubSpot contact {contact_id}"
-        print(error_msg)
-        return {"success": False, "error": error_msg}
-
-    print(f"✅ Successfully updated contact {contact_id} with address from Trestle.")
-    return {"success": True}
+    if update_success:
+        print(f"✅ Successfully updated contact {contact_id} with address from Trestle.")
+        return {"success": True}
+    else:
+        return {"success": False}

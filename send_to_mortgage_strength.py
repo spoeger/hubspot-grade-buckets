@@ -4,6 +4,7 @@ import requests
 import json
 import os
 import sys
+import time
 
 HUBSPOT_API_KEY = os.environ.get("HUBSPOT_API_KEY")
 TRESTLE_API_KEY = os.environ.get("TRESTLE_API_KEY")
@@ -60,16 +61,18 @@ def send_to_mortgage_strength(contact):
         "zip": props.get("zip")
     }
 
+    start_send = time.time()
     response = requests.post(PARTNER_WEBHOOK_URL, json=payload)
+    elapsed_send = time.time() - start_send
+
     if response.status_code == 200:
-        print(f"📤 Sent to Mortgage Strength: contact {contact['id']}")
+        print(f"📤 Sent to Mortgage Strength: contact {contact['id']} (⏱️ {elapsed_send:.2f}s)")
         return True
     else:
         print(f"❌ Failed to send {contact['id']} to partner: {response.status_code} - {response.text}")
         return False
 
 def main():
-    # Optional: pass a contact ID as a CLI argument
     contact_id = sys.argv[1] if len(sys.argv) > 1 else None
 
     if contact_id:
@@ -84,7 +87,6 @@ def main():
             print("❌ Error with specific contact:", e)
         return
 
-    # Otherwise run in bulk mode
     print("🔄 Starting batch send to Mortgage Strength...")
     processed_ids = load_processed_ids()
     new_processed = set()
