@@ -8,7 +8,7 @@ import time
 
 HUBSPOT_API_KEY = os.environ.get("HUBSPOT_API_KEY")
 TRESTLE_API_KEY = os.environ.get("TRESTLE_API_KEY")
-PARTNER_WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/582745/2xlxuhn/"
+PARTNER_WEBHOOK_URL = "# Replace"
 PROCESSED_FILE = "processed_contacts.json"
 
 def load_processed_ids():
