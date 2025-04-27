@@ -34,11 +34,6 @@ def receive_grade():
         payload = {
             "properties": {
                 "grade": grade,
-                "grade_color": {
-                    "A": "green",
-                    "B": "yellow",
-                    "C": "red"
-                }.get(grade.upper(), "gray")
             }
         }
 
