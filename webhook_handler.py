@@ -3,37 +3,57 @@ from update_contact_from_phone import process_contact
 import os
 import requests
 import time
+from log_to_sheet import log_to_sheet  # ✅ NEW import for logging steps to Google Sheets
 
 app = Flask(__name__)
 
 # --- TRESTLE ROUTE ---
 @app.route("/webhook/update-contact", methods=["POST"])
 def webhook_update_contact():
-    data = request.get_json()
+    try:
+        data = request.get_json()
 
-    # Validate inputs
-    contact_id = data.get("contact_id")
-    phone_number = data.get("phone_number")
+        # Validate inputs
+        contact_id = data.get("contact_id")
+        phone_number = data.get("phone_number")
 
-    if not contact_id or not phone_number:
+        if not contact_id or not phone_number:
+            return jsonify({
+                "success": False,
+                "error": "Missing contact_id or phone_number in request body"
+            }), 400
+
+        print(f"📞 Received update request for contact {contact_id} with phone {phone_number}")
+
+        script_name = "Update Contact Script"
+        start_processing = time.time()
+
+        # Call the main logic
+        result = process_contact(contact_id, phone_number)
+
+        elapsed_processing = round(time.time() - start_processing, 2)
+
+        if not result.get("success"):
+            log_to_sheet(script_name, "Update Contact", "Failed", f"Failed updating contact {contact_id}", start_time=start_processing)
+            return jsonify({
+                "success": False,
+                "error": result.get("error", "Unknown failure occurred")
+            }), 500
+
+        log_to_sheet(script_name, "Update Contact", "Success", f"Successfully updated contact {contact_id}", start_time=start_processing)
+        return jsonify({
+            "success": True,
+            "message": f"Contact {contact_id} updated successfully."
+        }), 200
+
+    except Exception as e:
+        import traceback
+        error_message = traceback.format_exc()
+        log_to_sheet("Update Contact Script", "Webhook Error", "Error", error_message)
         return jsonify({
             "success": False,
-            "error": "Missing contact_id or phone_number in request body"
-        }), 400
-
-    # Call the main logic
-    result = process_contact(contact_id, phone_number)
-
-    if not result.get("success"):
-        return jsonify({
-            "success": False,
-            "error": result.get("error", "Unknown failure occurred")
+            "error": str(e)
         }), 500
-
-    return jsonify({
-        "success": True,
-        "message": f"Contact {contact_id} updated successfully."
-    }), 200
 
 # --- MORTGAGE STRENGTH ROUTE ---
 @app.route("/receive-grade", methods=["POST"])
@@ -74,4 +94,3 @@ def receive_grade():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
