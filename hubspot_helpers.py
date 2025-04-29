@@ -51,7 +51,8 @@ def update_contact_address(contact_id, address_data):
         "address": address_data.get("street"),
         "city": address_data.get("city"),
         "state": address_data.get("state"),
-        "zip": address_data.get("zip")
+        "zip": address_data.get("zip"),
+        "lead_source": "Trestle"
     }
 
     payload = {
