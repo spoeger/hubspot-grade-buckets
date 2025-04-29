@@ -61,19 +61,19 @@ def receive_grade():
     data = request.get_json()
     print("📥 Received grade payload:", data)
 
-    unique_id = data.get("unique_id")
+    unique_id = data.get("unique_id") or data.get("record_id")
     grade = data.get("grade")
 
+    script_name = "Receive Grade Script"
+    start_time = time.time()
+
     if not unique_id or not grade:
-        print("❌ Missing expected fields in payload:")
-        print("→ unique_id:", unique_id)
-        print("→ grade:", grade)
-        print("→ full payload:", data)
+        message = f"Missing fields → unique_id: {unique_id}, grade: {grade}, full payload: {data}"
+        print("❌", message)
+        log_to_sheet(script_name, "Validation", "Error", message, start_time=start_time)
         return jsonify({"error": "Missing unique_id or grade", "received": data}), 400
 
     try:
-        start_update = time.time()
-
         url = f"https://api.hubapi.com/crm/v3/objects/contacts/{unique_id}"
         headers = {
             "Authorization": f"Bearer {os.environ.get('HUBSPOT_API_KEY')}",
@@ -88,13 +88,16 @@ def receive_grade():
         response = requests.patch(url, headers=headers, json=payload)
         response.raise_for_status()
 
-        elapsed_update = time.time() - start_update
-        print(f"✅ Grade '{grade}' added to contact {unique_id} (⏱️ {elapsed_update:.2f}s)")
+        duration = time.time() - start_time
+        success_msg = f"Grade '{grade}' added to contact {unique_id} in {duration:.2f}s"
+        print("✅", success_msg)
+        log_to_sheet(script_name, "Update HubSpot", "Success", success_msg, start_time=start_time)
+
         return jsonify({"status": "success", "updated": unique_id}), 200
 
     except requests.exceptions.RequestException as e:
-        print("❌ HubSpot update failed:", e)
+        error_msg = f"HubSpot update failed: {str(e)}"
+        print("❌", error_msg)
+        log_to_sheet(script_name, "Update HubSpot", "Error", error_msg, start_time=start_time)
         return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    
