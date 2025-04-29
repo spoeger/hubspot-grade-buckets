@@ -65,7 +65,11 @@ def receive_grade():
     grade = data.get("grade")
 
     if not unique_id or not grade:
-        return jsonify({"error": "Missing unique_id or grade"}), 400
+        print("❌ Missing expected fields in payload:")
+        print("→ unique_id:", unique_id)
+        print("→ grade:", grade)
+        print("→ full payload:", data)
+        return jsonify({"error": "Missing unique_id or grade", "received": data}), 400
 
     try:
         start_update = time.time()
