@@ -76,3 +76,24 @@ def update_contact_address(contact_id, address_data):
         print(f"❌ Unexpected HubSpot error: {str(e)}")
         log_to_sheet(script_name, "Update Contact", "Error", full_error)
         return False
+
+def update_contact_property(contact_id, property_name, value):
+    url = f"{HUBSPOT_BASE_URL}/crm/v3/objects/contacts/{contact_id}"
+    headers = {
+        "Authorization": f"Bearer {HUBSPOT_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "properties": {
+            property_name: value
+        }
+    }
+
+    try:
+        response = requests.patch(url, headers=headers, json=payload)
+        response.raise_for_status()
+        print(f"✅ Updated {property_name} for contact {contact_id}")
+        return True
+    except Exception as e:
+        print(f"❌ Failed to update {property_name} for {contact_id}: {e}")
+        return False
