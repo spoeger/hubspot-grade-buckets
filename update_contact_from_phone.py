@@ -8,16 +8,26 @@ import re
 
 # --- Phone Validation ---
 def is_valid_number(phone):
+    # Remove all non-digit characters
     digits = re.sub(r'\D', '', phone)
-    # Strip a leading country code "1" if present
-    if digits.startswith('1') and len(digits) ==11:
+
+    # Strip a leading country code "1" if present (after cleanup)
+    if digits.startswith('1') and len(digits) == 11:
         digits = digits[1:]
-    
+
+    # Reject common fake numbers
     if digits in ["1234567890", "0000000000", "1111111111"]:
         return False
-    if digits.startswith("555"):
+
+    # Reject anything not 10 digits after formatting
+    if len(digits) != 10:
         return False
-    return len(digits) == 10
+
+    # Reject numbers with 555 in the central office code (middle three digits)
+    if digits[3:6] == "555":
+        return False
+
+    return True
 
 def process_contact(contact_id, phone_number):
     print(f"Starting process for contact {contact_id} with phone {phone_number}")
