@@ -9,6 +9,10 @@ import re
 # --- Phone Validation ---
 def is_valid_number(phone):
     digits = re.sub(r'\D', '', phone)
+    # Strip a leading country code "1" if present
+    if digits.startswith('1') and len(digits) ==11:
+        digits = digits[1:]
+    
     if digits in ["1234567890", "0000000000", "1111111111"]:
         return False
     if digits.startswith("555"):
